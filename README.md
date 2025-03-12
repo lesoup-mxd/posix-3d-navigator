@@ -16,36 +16,51 @@ The POSIX 3D Navigator is an interactive application that allows users to explor
 ## Project Structure
 
 ``` $
-posix-3d-navigator
-├── src
-│   ├── main.mojo               # Entry point of the application
-│   ├── filesystem               # File system traversal logic
-│   │   ├── posix_walker.mojo   # Logic to navigate POSIX file system
-│   │   └── file_metadata.mojo   # Metadata management for files
-│   ├── rendering                # Rendering logic
-│   │   ├── renderer.mojo       # Vulkan rendering pipeline setup
-│   │   ├── vulkan_interface.mojo # Vulkan API interface
-│   │   ├── camera.mojo         # Camera management for 3D view
-│   │   ├── scene.mojo          # Scene management for rendering
-│   │   └── models.mojo         # 3D model management
-│   ├── networking              # Multiplayer networking components
-│   │   └── session_manager.mojo # Session and user management
-│   ├── extra                   # Extra utilities
-│   │   └── math                # Math utilities
-│   │       ├── vector.mojo     # Vector math operations
-│   │       └── matrix.mojo     # Matrix math operations
-│   └── input                   # User input handling
-│       └── controls.mojo       # Navigation and interaction controls
-├── cpp_lib                      # C++ library for Vulkan
-│   ├── vulkan_wrapper.cpp       # Implementation of Vulkan wrapper functions
-│   ├── vulkan_wrapper.h         # Declaration of Vulkan wrapper functions
-│   └── CMakeLists.txt          # Build configuration for C++ library
-├── assets                       # Assets for the application
-│   └── shaders                  # Shader files
-│       ├── vertex.spv          # Compiled vertex shader
-│       └── fragment.spv        # Compiled fragment shader
-├── README.md                    # Project documentation
-└── build.mojo                  # Build configuration for Mojo project
+posix-3d-navigator/
+  README.md                     # Project documentation
+  build.mojo                    # Build configuration for Mojo project
+
+  src/                          # Main source directory
+    main.mojo                   # Entry point of the application
+    
+    filesystem/                 # File system traversal logic
+      posix_walker.mojo         # Logic to navigate POSIX file system
+      file_metadata.mojo        # Metadata management for files
+    
+    rendering/                  # Rendering logic
+      renderer.mojo             # Vulkan rendering pipeline setup
+      vulkan_interface.mojo     # Vulkan API interface
+      camera.mojo               # Camera management for 3D view
+      window.mojo               # Window management
+      scene.mojo                # Scene management for rendering
+      models.mojo               # 3D model management
+    
+    networking/                 # Multiplayer networking components
+      session_manager.mojo      # Session and user management
+    
+    common/                     # Common data structures
+      objects/                  # Object definitions
+        files.mojo              # File object structures
+        users.mojo              # User identity structures
+        render_objects.mojo     # Rendering object structures
+    
+    extra/                      # Extra utilities
+      math/                     # Math utilities
+        vector.mojo             # Vector math operations
+        matrix.mojo             # Matrix math operations
+    
+    input/                      # User input handling
+      controls.mojo             # Navigation and interaction controls
+
+  cpp_lib/                      # C++ library for Vulkan
+    vulkan_wrapper.cpp          # Implementation of Vulkan wrapper functions
+    vulkan_wrapper.h            # Declaration of Vulkan wrapper functions
+    CMakeLists.txt              # Build configuration for C++ library
+
+  assets/                       # Assets for the application
+    shaders/                    # Shader files
+      vertex.glsl               # Vertex shader source
+      fragment.glsl             # Fragment shader source (Phong lighting model)
 ```
 
 ## Setup Instructions
@@ -62,27 +77,11 @@ posix-3d-navigator
    cd posix-3d-navigator
    ```
 
-3. Install Vulkan SDK:
+3. Install Vulkan SDK
 
-   ### For Ubuntu/Debian
+   This part depends on your distribution / Operating system. Please check your preferred mirrors for Vulkan SDK package.
 
-   ``` $
-   sudo apt install vulkan-sdk
-   ```
-
-   ### For Fedora
-
-   ``` $
-   sudo dnf install vulkan-devel
-   ```
-
-   ### For Arch Linux
-
-   ``` $
-   sudo pacman -S vulkan-devel
-   ```
-
-4. Build the C++ library:
+5. Build the C++ library:
 
    ``` $
    cd cpp_lib
@@ -92,7 +91,7 @@ posix-3d-navigator
    ```
 
    This will generate the `libvulkan_wrapper.so` shared library.
-5. Run the Mojo application:
+6. Run the Mojo application:
 
    ``` $
    mojo src/main.mojo
