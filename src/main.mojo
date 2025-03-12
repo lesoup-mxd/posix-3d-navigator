@@ -1,4 +1,4 @@
-# This file serves as the entry point of the application. It initializes the OpenGL context, sets up the main loop, and handles the overall application flow.
+# This file serves as the entry point of the application. It initializes the Vulkan context, sets up the main loop, and handles the overall application flow.
 
 import filesystem.posix_walker
 import rendering.renderer
@@ -18,7 +18,7 @@ struct Main:
 
     fn initialize(mut self):
         window = Window.create("POSIX 3D Navigator", 800, 600)
-        OpenGL.initialize()
+        # No init here, defined within posix walker TODO: Review filesystem/posix_walker functions, mb split em up
         renderer = Renderer()
         camera = Camera()
         scene = Scene()

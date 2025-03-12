@@ -1,25 +1,30 @@
-// This file manages the overall scene, including the addition and removal of objects, as well as the rendering process. 
+# This file manages the overall scene, including the addition and removal of objects, as well as the rendering process.
 
-class Scene {
-    private:
-        List<Object3D> objects;
+# TODO: remove the placeholder
+from extra.math.vector import Vector3f
 
-    public:
-        Scene() {
-            objects = new List<Object3D>();
-        }
 
-        void addObject(Object3D object) {
-            objects.add(object);
-        }
+@value
+struct Object3D:
+    var id: String
+    var pos: Vector3f
+    var rot: Vector3f
+    var scale: Vector3f
 
-        void removeObject(Object3D object) {
-            objects.remove(object);
-        }
 
-        void render() {
-            for (Object3D object : objects) {
-                object.render();
-            }
-        }
-}
+struct Scene:
+    var objects: List[Object3D]
+
+    fn __init__(mut self):
+        self.objects = List[Object3D]()
+
+        def addObject(mut self, object: Object3D):
+            self.objects.append()
+
+        def removeObject(mut self, object: Object3D):
+            self.objects.remove(object)
+
+        def render(mut self):
+            for i in range(len(self.objects)):
+                object = self.objects[i]
+                object.render()

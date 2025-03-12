@@ -8,7 +8,7 @@ from os import path
 from collections import Dict, List, Set
 
 from filesystem.file_metadata import FileMetadata
-from rendering.vulkan_interface import VulkanRenderer
+from rendering.vulkan_interface import VulkanRenderer, FileObjectEntity
 from networking.session_manager import SessionManager
 from extra.math.vector import Vector3f, Vector3i
 
@@ -18,7 +18,7 @@ struct FileObject:
     var metadata: FileMetadata
     var position: Vector3f
     var rotation: Vector3f
-    var scale: Float32
+    var scale: Vector3f
     var color: Vector3f
     var object_id: String  # Unique ID for networking
 
@@ -46,9 +46,9 @@ struct PosixWalker:
     var event_callback: fn (String, Dict[String, String])
 
     # Room dimensions based on directory contents
-    var roomWidth: Float64
-    var roomHeight: Float64
-    var roomDepth: Float64
+    var roomWidth: Float32
+    var roomHeight: Float32
+    var roomDepth: Float32
 
     fn __init__(
         mut self,
@@ -74,28 +74,28 @@ struct PosixWalker:
 
         # Initialize renderer
         self.renderer = VulkanRenderer()
+        # Set up multiplayer if requested
+        self.session = SessionManager(
+            username=username,
+        )
+        self.localUserId = self.session.get_user_id()
+
+        # Create local user avatar (Tron identity disc)
+        var local_user = UserIdentity(
+            user_id=self.localUserId,
+            username=username if username else "User-" + self.localUserId[:8],
+            position=Vector3f(0.0, 1.0, 0.0),
+            rotation=Vector3f(0.0, 0.0, 0.0),
+            color=Vector3f(0.0, 0.8, 1.0),  # Tron blue
+            active=True,
+        )
+        self.users[self.localUserId] = local_user
+        self.event_callback = fn (String, Dict[String, String]): pass
+        #TODO: pass the event callback to the session manager, placeholder does not want to compile
+
         if not self.renderer.initialize():
             print("Failed to initialize Vulkan renderer")
             return
-        # Set up multiplayer if requested
-        if multiplayer:
-            self.session = SessionManager(
-                username=username,
-            )
-            self.localUserId = self.session.get_user_id()
-
-            # Create local user avatar (Tron identity disc)
-            var local_user = UserIdentity(
-                user_id=self.localUserId,
-                username=username if username else "User-"
-                + self.localUserId[:8],
-                position=Vector3f(0.0, 1.0, 0.0),
-                rotation=Vector3f(0.0, 0.0, 0.0),
-                color=Vector3f(0.0, 0.8, 1.0),  # Tron blue
-                active=True,
-            )
-            self.users[self.localUserId] = local_user
-
         # Initial scan of the directory
         self.scan_directory()
 
@@ -224,7 +224,7 @@ struct PosixWalker:
                 # Position calculation
                 var position = Vector3f(0.0, 0.0, 0.0)
                 var color = Vector3f(0.7, 0.7, 0.7)  # Default color
-                var scale = 1.0
+                var scale = Vector3f(1.0, 1.0, 1.0)
 
                 if is_dir:
                     # Directories positioned on the walls
@@ -232,7 +232,7 @@ struct PosixWalker:
                         dir_index, dir_count
                     )
                     color = Vector3f(0.2, 0.6, 1.0)  # Blue for directories
-                    scale = 1.5
+                    scale = Vector3f(1.5, 1.5, 1.5)
                     dir_index += 1
                 elif is_symlink:
                     # Symlinks positioned as portals
@@ -240,7 +240,7 @@ struct PosixWalker:
                         file_index, file_count
                     )
                     color = Vector3f(1.0, 0.5, 1.0)  # Purple for symlinks
-                    scale = 0.8
+                    scale = Vector3f(0.8, 0.8, 0.8)
                     file_index += 1
                 else:
                     # Regular files on the floor
@@ -248,11 +248,13 @@ struct PosixWalker:
                         file_index, file_count
                     )
                     color = self.get_color_for_file_type(entry)
-                    scale = (
-                        0.5 + (file_size / 1000000.0) * 0.5
-                    )  # Size affects scale
-                    if scale > 2.0:
-                        scale = 2.0  # Cap the maximum size
+                    _scale = Float32(0.5 + (file_size / 1000000.0) * 0.5)
+                    if _scale > 2.0:
+                        _scale = 2.0  # Cap the maximum size
+                    scale = Vector3f(
+                        _scale, _scale, _scale
+                    )  # Scale based on file size
+                    # Size affects scale
                     file_index += 1
 
                 # Create file object with unique ID for networking
@@ -263,9 +265,7 @@ struct PosixWalker:
                     metadata=metadata,
                     position=position,
                     rotation=Vector3f(0.0, 0.0, 0.0),
-                    scale=Float32(
-                        scale
-                    ),  # Might need to represent Scale as a 3D vector later. TODO
+                    scale=scale,
                     color=color,
                     object_id=object_id,
                 )
@@ -273,32 +273,38 @@ struct PosixWalker:
                 self.fileObjects[object_id] = file_obj
 
                 # Add to renderer
-                self.renderer.add_file_object(
-                    full_path,
-                    position.x,
-                    position.y,
-                    position.z,
-                    scale,
-                    color.x,
-                    color.y,
-                    color.z,
-                    is_dir,
-                    is_symlink,
+                _ = self.renderer.add_file_object(
+                    FileObjectEntity(
+                        full_path=full_path,
+                        pos=position,
+                        scale=scale,
+                        color=color,
+                        is_dir=is_dir,
+                        is_symlink=is_symlink,
+                    )
                 )
 
             # Update room in renderer
-            self.renderer.set_room_dimensions(
-                self.roomWidth, self.roomHeight, self.roomDepth
+            _ = self.renderer.update_file_object(
+                FileObjectEntity(
+                    full_path=self.currentPath,
+                    pos=Vector3f(0.0, 0.0, 0.0),
+                    scale=Vector3f(
+                        self.roomWidth, self.roomHeight, self.roomDepth
+                    ),
+                    color=Vector3f(1.0, 1.0, 1.0),  # White for room
+                    is_dir=False,
+                    is_symlink=False,
+                )
             )
-            self.renderer.set_room_path(self.currentPath)
 
         except:
             print("Error scanning directory:", self.currentPath)
 
     fn calculate_room_dimensions(mut self, entry_count: Int):
         # Adjust room size based on number of entries
-        var base_size = 10.0
-        var scale_factor = max(1.0, entry_count / 10)
+        var base_size: Float32 = 10.0
+        var scale_factor: Float32 = Float32(max(1.0, entry_count / 10))
 
         self.roomWidth = base_size * scale_factor
         self.roomHeight = 5 + scale_factor  # Height grows more slowly
@@ -314,16 +320,18 @@ struct PosixWalker:
 
     fn calculate_directory_position(self, index: Int, total: Int) -> Vector3f:
         # Directories are positioned along the walls
-        var segment = index / (total / 4)  # Which wall (0-3)
-        var pos_on_wall = index % (total / 4 + 1)  # Position along that wall
-        var wall_length = 0.0
+        var segment: Float32 = Float32(index / (total / 4))  # Which wall (0-3)
+        var pos_on_wall: Float32 = Float32(
+            index % (total / 4 + 1)
+        )  # Position along that wall
+        var wall_length: Float32 = 0.0
 
         if segment % 2 == 0:  # North/South walls
             wall_length = self.roomWidth
         else:  # East/West walls
             wall_length = self.roomDepth
 
-        var spacing = wall_length / (total / 4 + 1)
+        var spacing = wall_length / Float32((total / 4) + 1)
         var x: Float32 = 0.0
         var z: Float32 = 0.0
 
@@ -392,16 +400,17 @@ struct PosixWalker:
             user.rotation = rotation
             self.users[self.localUserId] = user
 
-            # Update in renderer
-            self.renderer.update_user_position(
-                self.localUserId,
-                position.x,
-                position.y,
-                position.z,
-                rotation.x,
-                rotation.y,
-                rotation.z,
+            # Construct user identity
+            var user_identity = UserIdentity(
+                user_id=user.user_id,
+                username=user.username,
+                position=user.position,
+                rotation=user.rotation,
+                color=user.color,
+                active=True,
             )
+            # Update in renderer
+            _ = self.renderer.update_user_position(user_identity)
 
             # Broadcast position if in multiplayer
             if self.session.is_active():
@@ -447,9 +456,7 @@ struct PosixWalker:
             )
 
             self.users[user_id] = new_user
-            self.renderer.add_user(
-                user_id, username, 0.0, 1.0, 0.0, 0.8, 0.2, 0.2
-            )
+            _ = self.renderer.add_user_object(new_user)
 
         elif event_type == "user_left":
             var user_id: String = ""
@@ -467,7 +474,8 @@ struct PosixWalker:
                     print("Error removing user:", e)
                 # Remove user from renderer
                 try:
-                    self.renderer.remove_user(user_id)
+                    pass  # TODO: change return type of register/unregister functions to UserIdentity/Bool. This way we can pass less redundant data
+                    # self.renderer.remove_user_object(user_id)
                 except e:
                     print("Error unregistering user from renderer:", e)
 
@@ -487,16 +495,23 @@ struct PosixWalker:
                     user.position = Vector3f(x, y, z)
                     user.rotation = Vector3f(rx, ry, rz)
                     self.users[user_id] = user
+                    # Construct user identity
+                    var user_identity = UserIdentity(
+                        user_id=user.user_id,
+                        username=user.username,
+                        position=user.position,
+                        rotation=user.rotation,
+                        color=user.color,
+                        active=True,
+                    )
 
                     # Update user in renderer
-                    self.renderer.update_user_position(
-                        user_id, x, y, z, rx, ry, rz
-                    )
+                    _ = self.renderer.update_user_position(user_identity)
 
                     # Show notification if user is in different directory
                     if path != self.currentPath:
-                        self.renderer.show_user_location_indicator(
-                            user_id, path
-                        )
+                        self.renderer.show_user_location_indicator(user_id)
+                        # TODO: Maybe define this within the struct?
+                        # This way we can unify the userobject update logic
             except e:
                 print("Error processing position update:", e)

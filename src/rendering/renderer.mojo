@@ -80,6 +80,9 @@ struct Renderer:
         self.textures = Dict[String, UInt64]()
         self.materials = Dict[String, UInt64]()
         self.command_buffers = List[CommandBuffer]()
+        self.pipeline = Pipeline(handle=0, layout=0)  # Placeholder
+        self.descriptor_set_layout = 0  # Placeholder
+        self.descriptor_pool = 0  # Placeholder
 
     fn initialize(mut self) -> Bool:
         print("Initializing Vulkan renderer")
