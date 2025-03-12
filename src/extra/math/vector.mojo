@@ -60,11 +60,6 @@ struct Vector3i:
     var y: Int
     var z: Int
 
-    fn __init__(mut self, x: Int = 0, y: Int = 0, z: Int = 0):
-        self.x = x
-        self.y = y
-        self.z = z
-
     # Basic vector operations
     fn __add__(self, other: Vector3i) -> Vector3i:
         return Vector3i(self.x + other.x, self.y + other.y, self.z + other.z)
@@ -78,3 +73,44 @@ struct Vector3i:
     # Convert to float vector
     fn to_float(self) -> Vector3f:
         return Vector3f(Float32(self.x), Float32(self.y), Float32(self.z))
+
+
+@value
+struct Vector2f:
+    var x: Float32
+    var y: Float32
+
+    fn __init__(mut self, x: Float32 = 0.0, y: Float32 = 0.0):
+        self.x = x
+        self.y = y
+
+    # Basic vector operations
+    fn __add__(self, other: Vector2f) -> Vector2f:
+        return Vector2f(self.x + other.x, self.y + other.y)
+
+    fn __sub__(self, other: Vector2f) -> Vector2f:
+        return Vector2f(self.x - other.x, self.y - other.y)
+
+    fn __mul__(self, scalar: Float32) -> Vector2f:
+        return Vector2f(self.x * scalar, self.y * scalar)
+
+    fn __truediv__(self, scalar: Float32) -> Vector2f:
+        return Vector2f(self.x / scalar, self.y / scalar)
+
+    fn dot(self, other: Vector2f) -> Float32:
+        return self.x * other.x + self.y * other.y
+
+    fn cross(self, other: Vector2f) -> Float32:
+        return self.x * other.y - self.y * other.x
+
+    fn length_squared(self) -> Float32:
+        return self.x * self.x + self.y * self.y
+
+    fn length(self) -> Float32:
+        return math.sqrt(self.length_squared())
+
+    fn normalized(self) -> Vector2f:
+        var len = self.length()
+        if len > 0.00001:  # Avoid division by zero
+            return self / len
+        return Vector2f(0, 0)

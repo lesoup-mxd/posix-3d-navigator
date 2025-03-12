@@ -3,13 +3,7 @@
 # TODO: remove the placeholder
 from extra.math.vector import Vector3f
 
-
-@value
-struct Object3D:
-    var id: String
-    var pos: Vector3f
-    var rot: Vector3f
-    var scale: Vector3f
+from common.objects.render_objects import Object3D
 
 
 struct Scene:
@@ -18,13 +12,22 @@ struct Scene:
     fn __init__(mut self):
         self.objects = List[Object3D]()
 
-        def addObject(mut self, object: Object3D):
-            self.objects.append()
+    fn addObject(mut self, object: Object3D) -> UInt:
+        for _obj in range(len(self.objects)):
+            obj = self.objects[_obj]
+            # Check if the object already exists in th e scene
+            if obj == object:
+                return 2  # Object already exists, no need to add it again
+        # Add the object to the scene
+        self.objects.append(object)
+        return 1  # Object added successfully
 
-        def removeObject(mut self, object: Object3D):
-            self.objects.remove(object)
+    fn removeObject(mut self, object: Object3D):
+        for i in range(len(self.objects)):
+            if self.objects[i] == object:
+                _ = self.objects.pop(i)
+                return
 
-        def render(mut self):
-            for i in range(len(self.objects)):
-                object = self.objects[i]
-                object.render()
+    def render(mut self):
+        pass
+        # TODO: Figure out where render calls should be

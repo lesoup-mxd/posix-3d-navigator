@@ -8,29 +8,11 @@ from os import path
 from collections import Dict, List, Set
 
 from filesystem.file_metadata import FileMetadata
-from rendering.vulkan_interface import VulkanRenderer, FileObjectEntity
+from rendering.vulkan_interface import VulkanRenderer
 from networking.session_manager import SessionManager
 from extra.math.vector import Vector3f, Vector3i
-
-
-@value
-struct FileObject:
-    var metadata: FileMetadata
-    var position: Vector3f
-    var rotation: Vector3f
-    var scale: Vector3f
-    var color: Vector3f
-    var object_id: String  # Unique ID for networking
-
-
-@value
-struct UserIdentity:
-    var user_id: String
-    var username: String
-    var position: Vector3f
-    var rotation: Vector3f
-    var color: Vector3f
-    var active: Bool
+from common.objects.users import UserIdentity
+from common.objects.files import FileObject, FileObjectEntity
 
 
 struct PosixWalker:

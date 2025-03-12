@@ -1,15 +1,6 @@
 from extra.math.vector import Vector3f
 from filesystem.posix_walker import UserIdentity
-
-
-@value
-struct FileObjectEntity:
-    var full_path: String
-    var pos: Vector3f
-    var scale: Vector3f
-    var color: Vector3f
-    var is_dir: Bool
-    var is_symlink: Bool
+from common.objects.files import FileObject, FileObjectEntity
 
 
 struct VulkanRenderer:

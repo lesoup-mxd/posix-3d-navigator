@@ -1,9 +1,9 @@
-project(CPP_Library VERSION 1.0)
+project(Vulkan_Wrapper VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Vulkan REQUIRED)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Vulkan_INCLUDE_DIR})
 
-add_library(gl_wrapper STATIC gl_wrapper.cpp)
-
-target_link_libraries(gl_wrapper OpenGL::GL)
+add_library(vulkan_wrapper SHARED vulkan_wrapper.cpp)
+target_link_libraries(vulkan_wrapper ${Vulkan_LIBRARIES})
