@@ -1,3 +1,5 @@
+# Honestly, i got no idea when networking will reach the "working" state
+
 from collections import Dict
 from memory import UnsafePointer, OwnedPointer
 import time

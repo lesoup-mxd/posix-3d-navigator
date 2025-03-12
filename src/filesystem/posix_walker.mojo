@@ -90,8 +90,21 @@ struct PosixWalker:
             active=True,
         )
         self.users[self.localUserId] = local_user
-        self.event_callback = fn (String, Dict[String, String]): pass
-        #TODO: pass the event callback to the session manager, placeholder does not want to compile
+
+        fn default_event_callback(
+            event: String,
+            data: Dict[String, String],
+        ):
+            # Default event callback
+            print("Event:", event)
+            for i in data:
+                try:
+                    print("Data:", i[], "=", data[i[]])
+                except:
+                    print("Error accessing data for key:", i[])
+
+        self.event_callback = default_event_callback
+        # TODO: pass the event callback to the session manager, placeholder for now
 
         if not self.renderer.initialize():
             print("Failed to initialize Vulkan renderer")
